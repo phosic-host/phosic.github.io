@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHOSIC DETECT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1E293B;   /* slate-800 */
+            --bg-med: #334155;     /* slate-700 */
+            --border-color: #475569; /* slate-600 */
+            --text-light: #E2E8F0; /* slate-200 */
+            --text-med: #94A3B8;   /* slate-400 */
+            --accent-blue: #3B82F6; /* blue-500 */
+            --accent-red: #EF4444;   /* red-500 */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        #app-container {
+            background-color: var(--bg-dark);
+        }
+
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: var(--accent-blue);
+        }
+        
+        .cam-button {
+            background-color: rgba(51, 65, 85, 0.7);
+            border: 1px solid var(--border-color);
+            color: var(--text-med);
+            backdrop-filter: blur(5px);
+            border-radius: 0;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .cam-button.active, .cam-button:hover {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+        
+        .form-input {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            border-radius: 0;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        .hud-element {
+            background-color: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--border-color);
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+</head>
+<body class="antialiased overflow-hidden">
+
+    <!-- App Container -->
+    <div id="app-container" class="w-full h-screen mx-auto relative">
+
+        <!-- Universal Exit Button -->
+        <button id="exit-app-btn" class="absolute top-4 right-4 z-50 p-2 hidden rounded-full hover:bg-slate-600/50 transition-colors">
+            <svg class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active p-4 bg-[var(--bg-dark)]">
+            <div class="w-full max-w-sm md:max-w-md bg-[var(--bg-med)] shadow-2xl shadow-black/30 flex flex-col border-2 border-[var(--border-color)]">
+                <div class="p-8 md:p-10">
+                    <div class="flex items-center space-x-4 mb-8">
+                        <svg class="h-12 w-12" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M45 10 H20 V90 H45 V70 C45 50, 65 50, 65 70 V90 H80 C80 50, 45 50, 45 10 Z" fill="#4A4A4A"/>
+                            <path d="M55 10 H30 V40 H55 C75 40, 75 10, 55 10 Z" fill="#2563EB"/>
+                        </svg>
+                        <h1 class="text-3xl md:text-4xl font-bold text-white tracking-wider font-mono">PHOSIC DETECT</h1>
+                    </div>
+                    <h2 class="text-xl md:text-2xl font-semibold text-[var(--text-light)]">SYSTEM LOGIN</h2>
+                    <p class="text-xs md:text-sm text-[var(--text-med)] mb-6">AUTHORIZED PERSONNEL ONLY</p>
+                    
+                    <div class="space-y-4 md:space-y-5">
+                        <div>
+                            <label for="username" class="text-sm md:text-base font-medium text-[var(--text-med)]">BADGE ID</label>
+                            <input type="text" id="username" value="" class="form-input font-mono text-base mt-1 block w-full py-2 px-3 md:py-3 md:px-4">
+                        </div>
+                        <div>
+                            <label for="password" class="text-sm md:text-base font-medium text-[var(--text-med)]">PASSCODE</label>
+                            <input type="password" id="password" value="" class="form-input font-mono text-base mt-1 block w-full py-2 px-3 md:py-3 md:px-4">
+                        </div>
+                        <button id="login-btn" class="w-full bg-[var(--accent-blue)] hover:brightness-110 text-white font-bold py-3 px-4 md:text-lg transition duration-300">
+                            AUTHENTICATE
+                        </button>
+                    </div>
+                     <div class="mt-6 text-center text-xs text-[var(--text-med)] font-mono">SYSTEM STATUS: <span class="text-[var(--accent-blue)]">ONLINE</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Case Details Screen -->
+        <div id="case-details-screen" class="screen p-4 bg-[var(--bg-dark)]">
+             <div class="w-full max-w-sm md:max-w-md bg-[var(--bg-med)] shadow-2xl shadow-black/30 flex flex-col p-8 md:p-10 border-2 border-[var(--border-color)] relative">
+                <button id="back-to-login-btn" class="absolute top-4 left-4 p-2 rounded-full hover:bg-slate-600/50 transition-colors">
+                    <svg class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <h2 class="text-2xl md:text-3xl font-bold text-white mb-6 text-center">EVIDENCE LOG</h2>
+                <div class="space-y-4 md:space-y-5">
+                    <div>
+                        <label for="case-number" class="text-sm md:text-base font-medium text-[var(--text-med)]">CASE ID / FIR NO.</label>
+                        <input type="text" id="case-number" value="" class="form-input font-mono text-base mt-1 block w-full py-2 px-3 md:py-3 md:px-4">
+                    </div>
+                    <div>
+                        <label for="case-date" class="text-sm md:text-base font-medium text-[var(--text-med)]">DATE</label>
+                        <input type="date" id="case-date" class="form-input font-mono text-base mt-1 block w-full py-2 px-3 md:py-3 md:px-4">
+                    </div>
+                    <button id="start-camera-btn" class="w-full bg-[var(--accent-blue)] hover:brightness-110 text-white font-bold py-3 px-4 md:text-lg transition duration-300">
+                        INITIATE CAPTURE
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Screen -->
+        <div id="camera-screen" class="screen !justify-start bg-black">
+            <video id="camera-feed" class="absolute inset-0 w-full h-full object-cover" autoplay playsinline></video>
+            <canvas id="overlay-canvas" class="absolute inset-0 w-full h-full object-contain"></canvas>
+            
+            <!-- HUD Elements -->
+            <div class="absolute inset-0 z-10 pointer-events-none text-xs md:text-sm">
+                <!-- Top Left -->
+                <div class="absolute top-4 left-4 md:top-6 md:left-6 space-y-2 text-white">
+                    <div id="cam-case-id" class="hud-element font-mono"></div>
+                    <div id="cam-officer" class="hud-element font-mono"></div>
+                </div>
+                <!-- Top Right -->
+                <div class="absolute top-4 right-4 md:top-6 md:right-6 text-right space-y-2 text-white">
+                    <div id="telemetry-datetime" class="hud-element font-mono"></div>
+                    <div id="telemetry-camera" class="hud-element font-mono"></div>
+                    <div class="hud-element font-mono">
+                        <p id="system-status">STORAGE: 87% | BATT: N/A</p>
+                    </div>
+                </div>
+                <!-- Bottom Left -->
+                <div id="system-log" class="absolute bottom-24 left-4 md:bottom-32 md:left-6 hud-element font-mono h-24 w-64 md:w-80 overflow-y-auto text-xs leading-tight"></div>
+            </div>
+
+            <!-- Left Controls -->
+            <div class="absolute top-1/2 -translate-y-1/2 left-0 p-4 md:p-6 flex flex-col items-start space-y-3 md:space-y-4 z-20">
+                <button id="grid-toggle-btn" class="cam-button">GRID</button>
+                <button id="flash-toggle-btn" class="cam-button">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                </button>
+            </div>
+
+            <!-- Right Controls -->
+            <div class="absolute top-1/2 -translate-y-1/2 right-0 p-4 md:p-6 flex flex-col items-end space-y-3 md:space-y-4 z-20">
+                <div class="text-center p-2 md:p-3 bg-slate-700/40 backdrop-blur-sm border border-white/10">
+                    <span class="text-xs md:text-sm font-semibold text-white">AI DETECT</span>
+                    <div class="relative inline-block w-10 md:w-12 mr-2 align-middle select-none transition duration-200 ease-in mt-1">
+                        <input type="checkbox" id="ai-toggle" class="toggle-checkbox absolute block w-6 h-6 md:w-7 md:h-7 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label for="ai-toggle" class="toggle-label block overflow-hidden h-6 md:h-7 rounded-full bg-gray-600 cursor-pointer"></label>
+                    </div>
+                </div>
+                <div id="light-modes" class="flex flex-col space-y-2 text-xs md:text-sm font-semibold">
+                    <button class="cam-button md:px-4 md:py-2">UV</button>
+                    <button class="cam-button md:px-4 md:py-2">V-BLUE</button>
+                    <button class="cam-button active md:px-4 md:py-2">GREEN</button>
+                    <button class="cam-button md:px-4 md:py-2">RED</button>
+                    <button class="cam-button md:px-4 md:py-2">IR</button>
+                    <button class="cam-button md:px-4 md:py-2">WHITE</button>
+                </div>
+            </div>
+            
+            <!-- Bottom Controls -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-black/80 to-transparent flex flex-col items-center z-20 space-y-4">
+                 <div class="flex space-x-2 bg-slate-700/40 backdrop-blur-sm border border-[var(--border-color)] p-1">
+                    <button id="mode-image-btn" class="px-4 py-1 md:px-6 md:py-2 text-sm md:text-base font-bold transition-colors duration-300 text-white">IMAGE</button>
+                    <button id="mode-video-btn" class="px-4 py-1 md:px-6 md:py-2 text-sm md:text-base font-bold transition-colors duration-300 text-white">VIDEO</button>
+                </div>
+               
+                <div class="w-full flex justify-around items-center">
+                    <div class="flex-1 text-center"></div>
+                    <div class="flex-shrink-0">
+                        <button id="capture-btn" class="p-2 transition-transform duration-200 ease-in-out active:scale-90">
+                            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-transparent border-4 border-gray-200 flex items-center justify-center">
+                                <div id="capture-inner-circle" class="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white transition-all duration-200 ease-in-out"></div>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <button id="gallery-btn" class="p-2 relative">
+                            <div id="gallery-thumbnail-container" class="w-12 h-12 md:w-16 md:h-16 bg-black/50 border-2 border-[var(--border-color)] flex items-center justify-center overflow-hidden">
+                                <img id="gallery-thumbnail" class="absolute w-full h-full object-cover hidden" src=""/>
+                            </div>
+                            <span id="gallery-count" class="absolute -top-1 -right-1 bg-[var(--accent-red)] text-white font-bold text-xs md:text-sm rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center hidden">0</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+             <div id="recording-indicator" class="absolute top-24 md:top-28 left-1/2 -translate-x-1/2 text-white font-bold hidden items-center text-sm md:text-base bg-[var(--accent-red)] px-3 py-1 shadow-lg">
+                <span id="recording-timer">REC 00:00</span>
+            </div>
+        </div>
+
+        <!-- Gallery Screen -->
+        <div id="gallery-screen" class="screen !justify-start !items-stretch bg-slate-800 p-4 flex-row gap-4">
+            <!-- Main Content -->
+            <div class="flex-grow h-full relative bg-black border-2 border-[var(--border-color)]">
+                 <img id="gallery-image" src="" class="w-full h-full object-contain"/>
+                 <video id="gallery-video" src="" class="w-full h-full object-contain hidden" controls></video>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="w-full md:w-96 flex-shrink-0 flex flex-col gap-4">
+                <div class="bg-slate-700 p-4 border-2 border-slate-600">
+                    <h3 class="font-bold text-lg mb-2">EVIDENCE DETAILS</h3>
+                    <div id="gallery-metadata" class="text-xs md:text-sm space-y-2 font-mono">
+                       <p id="meta-filename"></p>
+                       <p id="meta-timestamp"></p>
+                       <p id="meta-gps"></p>
+                       <p id="meta-dimensions"></p>
+                       <p id="meta-filesize"></p>
+                       <p class="break-all" id="meta-hash"></p>
+                    </div>
+                </div>
+                <div class="bg-slate-700 p-4 border-2 border-slate-600 flex-grow overflow-y-auto">
+                     <h3 class="font-bold text-lg mb-2">EVIDENCE LOG</h3>
+                     <div id="filmstrip" class="space-y-2"></div>
+                </div>
+                <button id="back-to-camera-btn" class="w-full bg-[var(--accent-blue)] hover:brightness-110 text-white font-bold py-3 px-4 md:text-lg transition duration-300">
+                    RETURN TO CAPTURE
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Error Modal -->
+        <div id="error-modal" class="screen absolute inset-0 z-50 h-full p-8 bg-black/80 backdrop-blur-sm">
+            <div class="bg-[var(--bg-med)] p-6 text-center max-w-sm border-2 border-[var(--border-color)] shadow-2xl shadow-black/50">
+                <h3 class="text-xl font-bold mb-4 text-[var(--accent-red)]">SYSTEM ERROR</h3>
+                <p id="error-message" class="text-[var(--text-med)] mb-6"></p>
+                <button id="close-error-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4">
+                    CLOSE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- State Management ---
+            let appState = {
+                officerName: '',
+                caseId: '',
+                caseDate: '',
+                capturedMedia: [],
+                aiDetection: false,
+                gridOverlay: false,
+                flashOn: false,
+                captureMode: 'image',
+                isRecording: false,
+                mediaRecorder: null,
+                recordedChunks: [],
+                recordingTimerInterval: null,
+                telemetryInterval: null,
+                logInterval: null,
+                currentGalleryIndex: 0,
+            };
+
+            // --- DOM Elements ---
+            const screens = {
+                login: document.getElementById('login-screen'),
+                caseDetails: document.getElementById('case-details-screen'),
+                camera: document.getElementById('camera-screen'),
+                gallery: document.getElementById('gallery-screen'),
+            };
+
+            const inputs = {
+                username: document.getElementById('username'),
+                password: document.getElementById('password'),
+                caseNumber: document.getElementById('case-number'),
+                caseDate: document.getElementById('case-date'),
+            };
+
+            const buttons = {
+                login: document.getElementById('login-btn'),
+                startCamera: document.getElementById('start-camera-btn'),
+                capture: document.getElementById('capture-btn'),
+                gallery: document.getElementById('gallery-btn'),
+                gridToggle: document.getElementById('grid-toggle-btn'),
+                flashToggle: document.getElementById('flash-toggle-btn'),
+                backToLogin: document.getElementById('back-to-login-btn'),
+                backToCamera: document.getElementById('back-to-camera-btn'),
+                modeImage: document.getElementById('mode-image-btn'),
+                modeVideo: document.getElementById('mode-video-btn'),
+                exitApp: document.getElementById('exit-app-btn'),
+                closeErrorModal: document.getElementById('close-error-modal-btn'),
+            };
+            const cameraElements = {
+                feed: document.getElementById('camera-feed'),
+                overlay: document.getElementById('overlay-canvas'),
+                camCaseId: document.getElementById('cam-case-id'),
+                camOfficer: document.getElementById('cam-officer'),
+                aiToggle: document.getElementById('ai-toggle'),
+                lightModes: document.getElementById('light-modes'),
+                captureInnerCircle: document.getElementById('capture-inner-circle'),
+                recordingIndicator: document.getElementById('recording-indicator'),
+                recordingTimer: document.getElementById('recording-timer'),
+                systemLog: document.getElementById('system-log'),
+            };
+            const galleryElements = {
+                image: document.getElementById('gallery-image'),
+                video: document.getElementById('gallery-video'),
+                thumbnail: document.getElementById('gallery-thumbnail'),
+                count: document.getElementById('gallery-count'),
+                filmstrip: document.getElementById('filmstrip'),
+                metaFilename: document.getElementById('meta-filename'),
+                metaTimestamp: document.getElementById('meta-timestamp'),
+                metaGps: document.getElementById('meta-gps'),
+                metaDimensions: document.getElementById('meta-dimensions'),
+                metaFilesize: document.getElementById('meta-filesize'),
+                metaHash: document.getElementById('meta-hash'),
+            };
+            const telemetryElements = {
+                datetime: document.getElementById('telemetry-datetime'),
+                camera: document.getElementById('telemetry-camera'),
+                systemStatus: document.getElementById('system-status'),
+            };
+            const errorModalElements = {
+                modal: document.getElementById('error-modal'),
+                message: document.getElementById('error-message'),
+            };
+           
+            // --- Utility Functions ---
+            const switchScreen = (screenName) => {
+                const currentActive = document.querySelector('.screen.active');
+                if(currentActive) currentActive.classList.remove('active');
+                screens[screenName].classList.add('active');
+
+                if (screenName === 'login') {
+                    buttons.exitApp.classList.add('hidden');
+                } else {
+                    buttons.exitApp.classList.remove('hidden');
+                }
+            };
+            
+            async function sha256(message) {
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+            
+            const addLog = (message, type = 'info') => {
+                const log = cameraElements.systemLog;
+                if (!log) return;
+                const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+                const color = type === 'error' ? 'text-red-400' : 'text-blue-400';
+                log.innerHTML += `<div><span class="text-gray-500">${timestamp}</span> <span class="${color}">></span> ${message}</div>`;
+                log.scrollTop = log.scrollHeight;
+            };
+
+            // --- HUD & Telemetry Simulation ---
+            const startTelemetry = () => {
+                addLog("Telemetry stream started.");
+                if (appState.telemetryInterval) clearInterval(appState.telemetryInterval);
+                appState.telemetryInterval = setInterval(() => {
+                    const now = new Date();
+                    telemetryElements.datetime.textContent = now.toISOString();
+                    telemetryElements.camera.innerHTML = `ISO: 400 | S: 1/60 | F: 2.8`;
+                }, 1000); 
+
+                if(appState.logInterval) clearInterval(appState.logInterval);
+                const logMessages = ["AI Module nominal", "Checking sensor status", "Connection stable", "Buffer clear"];
+                appState.logInterval = setInterval(()=> addLog(logMessages[Math.floor(Math.random() * logMessages.length)]), 5000);
+            };
+
+            const stopTelemetry = () => {
+                addLog("Telemetry stream stopped.");
+                clearInterval(appState.telemetryInterval);
+                clearInterval(appState.logInterval);
+                appState.telemetryInterval = null;
+                appState.logInterval = null;
+            };
+            
+            // --- UI Updates ---
+            const updateCaptureUI = () => {
+                const innerCircle = cameraElements.captureInnerCircle;
+                if (appState.captureMode === 'video') {
+                    buttons.modeImage.classList.remove('bg-[var(--accent-blue)]', 'text-black', 'font-bold');
+                    buttons.modeVideo.classList.add('bg-[var(--accent-blue)]', 'text-black', 'font-bold');
+                    if (appState.isRecording) {
+                        innerCircle.classList.add('!bg-[var(--accent-red)]', '!w-8', '!h-8', 'md:!w-10', 'md:!h-10', '!rounded-sm');
+                        cameraElements.recordingIndicator.classList.remove('hidden');
+                        cameraElements.recordingIndicator.classList.add('flex');
+                    } else {
+                        innerCircle.classList.remove('!bg-[var(--accent-red)]', '!w-8', '!h-8', 'md:!w-10', 'md:!h-10', '!rounded-sm');
+                        innerCircle.classList.add('bg-[var(--accent-red)]');
+                        cameraElements.recordingIndicator.classList.add('hidden');
+                    }
+                } else { // image mode
+                    buttons.modeVideo.classList.remove('bg-[var(--accent-blue)]', 'text-black', 'font-bold');
+                    buttons.modeImage.classList.add('bg-[var(--accent-blue)]', 'text-black', 'font-bold');
+                    innerCircle.classList.remove('bg-[var(--accent-red)]', '!bg-[var(--accent-red)]', '!w-8', '!h-8', 'md:!w-10', 'md:!h-10', '!rounded-sm');
+                }
+            };
+            
+            const updateTimer = () => {
+                let seconds = 0;
+                cameraElements.recordingTimer.textContent = 'REC 00:00';
+                appState.recordingTimerInterval = setInterval(() => {
+                    seconds++;
+                    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                    const secs = (seconds % 60).toString().padStart(2, '0');
+                    cameraElements.recordingTimer.textContent = `REC ${mins}:${secs}`;
+                }, 1000);
+            };
+
+            const updateGalleryView = () => {
+                if(appState.capturedMedia.length === 0) return;
+                const media = appState.capturedMedia[appState.currentGalleryIndex];
+                if (!media) return;
+
+                if (media.type === 'image') {
+                    galleryElements.image.src = media.mediaUrl;
+                    galleryElements.image.classList.remove('hidden');
+                    galleryElements.video.classList.add('hidden');
+                    galleryElements.video.src = '';
+                } else {
+                    galleryElements.video.src = media.mediaUrl;
+                    galleryElements.video.classList.remove('hidden');
+                    galleryElements.image.classList.add('hidden');
+                    galleryElements.image.src = '';
+                }
+                
+                galleryElements.metaFilename.innerHTML = `FILE: <span class="text-white">${media.filename}</span>`;
+                galleryElements.metaTimestamp.innerHTML = `TIMESTAMP: <span class="text-white">${media.timestamp.toISOString()}</span>`;
+                galleryElements.metaGps.innerHTML = `GPS: <span class="text-white">${media.location}</span>`;
+                galleryElements.metaDimensions.innerHTML = `DIMENSIONS: <span class="text-white">${media.dimensions}</span>`;
+                galleryElements.metaFilesize.innerHTML = `SIZE: <span class="text-white">${media.fileSize}</span>`;
+                galleryElements.metaHash.innerHTML = `SHA256: <span class="text-white break-all">${media.hash}</span>`;
+
+                document.querySelectorAll('.filmstrip-item').forEach((item, index) => {
+                    if (index === appState.currentGalleryIndex) {
+                        item.classList.add('border-blue-500');
+                    } else {
+                        item.classList.remove('border-blue-500');
+                    }
+                });
+            };
+
+            const populateFilmstrip = () => {
+                galleryElements.filmstrip.innerHTML = '';
+                appState.capturedMedia.forEach((media, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'filmstrip-item flex items-center p-2 gap-2 bg-slate-800 border-2 border-transparent hover:bg-slate-600 cursor-pointer';
+                    item.dataset.index = index;
+
+                    const img = document.createElement('img');
+                    img.src = media.thumbnailUrl;
+                    img.className = 'w-16 h-16 object-cover flex-shrink-0';
+                    item.appendChild(img);
+                    
+                    const textContainer = document.createElement('div');
+                    textContainer.className = 'text-xs font-mono truncate';
+                    textContainer.innerHTML = `<p class="font-bold text-white">${media.filename}</p><p class="text-slate-400">${media.timestamp.toLocaleDateString()}</p>`;
+                    item.appendChild(textContainer);
+
+                    if(media.type === 'video') {
+                        const playIcon = document.createElement('div');
+                        playIcon.innerHTML = `<svg class="w-6 h-6 text-white opacity-50" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>`;
+                        playIcon.className = 'ml-auto mr-2 flex-shrink-0';
+                        item.appendChild(playIcon);
+                    }
+
+                    item.addEventListener('click', () => {
+                        appState.currentGalleryIndex = index;
+                        updateGalleryView();
+                    });
+                    galleryElements.filmstrip.appendChild(item);
+                });
+            };
+
+            // --- Capture & Recording ---
+            const startRecording = () => {
+                if (!cameraElements.feed.srcObject) return;
+                addLog("Video recording started.");
+                appState.recordedChunks = [];
+                const stream = cameraElements.feed.srcObject;
+                appState.mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+                appState.mediaRecorder.ondataavailable = e => { if (e.data.size > 0) appState.recordedChunks.push(e.data) };
+
+                appState.mediaRecorder.onstop = async () => {
+                    addLog("Video recording stopped.");
+                    const videoBlob = new Blob(appState.recordedChunks, { type: 'video/webm' });
+                    const videoUrl = URL.createObjectURL(videoBlob);
+                    
+                    const tempVideo = document.createElement('video');
+                    tempVideo.src = videoUrl;
+                    tempVideo.onloadeddata = async () => {
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = tempVideo.videoWidth;
+                        tempCanvas.height = tempVideo.videoHeight;
+                        tempCanvas.getContext('2d').drawImage(tempVideo, 0, 0);
+                        const thumbnailUrl = tempCanvas.toDataURL('image/jpeg', 0.5);
+                        const timestamp = new Date();
+                        const hash = await sha256(videoUrl + timestamp.toISOString());
+                        const mediaCount = appState.capturedMedia.length + 1;
+
+                        const newMedia = {
+                            type: 'video',
+                            mediaUrl, thumbnailUrl, timestamp, hash,
+                            filename: `VID_${mediaCount.toString().padStart(4, '0')}.webm`,
+                            location: `${(18.5204 + (Math.random() - 0.5) * 0.001).toFixed(6)} N, ${(73.8567 + (Math.random() - 0.5) * 0.001).toFixed(6)} E`,
+                            dimensions: `${tempVideo.videoWidth}x${tempVideo.videoHeight}`,
+                            fileSize: `${(videoBlob.size / 1024 / 1024).toFixed(2)} MB`
+                        };
+                        appState.capturedMedia.push(newMedia);
+                        galleryElements.thumbnail.src = thumbnailUrl;
+                        galleryElements.thumbnail.classList.remove('hidden');
+                        galleryElements.count.textContent = appState.capturedMedia.length;
+                        galleryElements.count.classList.remove('hidden');
+                    };
+                };
+
+                appState.mediaRecorder.start();
+                updateTimer();
+            };
+            
+            const stopRecording = () => {
+                if (appState.mediaRecorder?.state !== 'inactive') appState.mediaRecorder.stop();
+                clearInterval(appState.recordingTimerInterval);
+            };
+
+            // --- Canvas Drawing ---
+            const drawOverlays = () => {
+                const ctx = cameraElements.overlay.getContext('2d');
+                const canvas = cameraElements.overlay;
+                canvas.width = cameraElements.feed.videoWidth;
+                canvas.height = cameraElements.feed.videoHeight;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (appState.gridOverlay) {
+                    ctx.strokeStyle = 'rgba(0, 161, 255, 0.4)'; ctx.lineWidth = 1;
+                    for (let i = 1; i < 3; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo((canvas.width / 3) * i, 0); ctx.lineTo((canvas.width / 3) * i, canvas.height);
+                        ctx.moveTo(0, (canvas.height / 3) * i); ctx.lineTo(canvas.width, (canvas.height / 3) * i);
+                        ctx.stroke();
+                    }
+                }
+                if (appState.aiDetection) {
+                    const detections = [{ x: 0.3, y: 0.4, w: 0.1, h: 0.15, label: 'BLOOD 85%' },{ x: 0.4, y: 0.35, w: 0.15, h: 0.1, label: 'BLOOD 53%' }];
+                    detections.forEach(det => {
+                        const x = det.x*canvas.width; const y = det.y*canvas.height; const w = det.w*canvas.width; const h = det.h*canvas.height;
+                        ctx.strokeStyle = 'rgba(248, 81, 73, 0.8)'; ctx.lineWidth = 2; ctx.strokeRect(x, y, w, h);
+                        ctx.fillStyle = 'rgba(248, 81, 73, 0.8)'; ctx.font = 'bold 16px Roboto Mono'; ctx.fillText(det.label, x, y - 5);
+                    });
+                }
+                if(screens.camera.classList.contains('active')) requestAnimationFrame(drawOverlays);
+            };
+
+            // --- Camera Logic ---
+            const startCamera = async () => {
+                addLog("Initializing camera sensor...");
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
+                    cameraElements.feed.srcObject = stream;
+                    cameraElements.feed.onloadedmetadata = () => {
+                        addLog("Camera feed active.");
+                        requestAnimationFrame(drawOverlays);
+                    };
+                } catch (err) {
+                    addLog(`ERROR: ${err.name}`, 'error');
+                    if (err.name === "NotAllowedError" || err.message.includes("Permission denied")) {
+                        errorModalElements.message.textContent = "Camera access denied. Grant permission in browser settings and refresh.";
+                    } else {
+                        errorModalElements.message.textContent = "Could not access camera. Ensure it is connected and not in use.";
+                    }
+                    errorModalElements.modal.classList.add('active');
+                }
+            };
+            
+            const stopCamera = () => {
+                if (cameraElements.feed.srcObject) {
+                    cameraElements.feed.srcObject.getTracks().forEach(track => track.stop());
+                    cameraElements.feed.srcObject = null;
+                    addLog("Camera feed terminated.");
+                }
+            };
+            
+            const initBatteryIndicator = () => {
+                const batteryStatusEl = telemetryElements.systemStatus;
+                if (!batteryStatusEl) return;
+
+                const updateBatteryUI = (battery) => {
+                    const percentage = Math.floor(battery.level * 100);
+                    const chargingIcon = battery.charging ? ' ⚡' : '';
+                    batteryStatusEl.textContent = `STORAGE: 87% | BATT: ${percentage}%${chargingIcon}`;
+                };
+
+                if ('getBattery' in navigator) {
+                    navigator.getBattery().then(battery => {
+                        updateBatteryUI(battery);
+                        battery.addEventListener('levelchange', () => updateBatteryUI(battery));
+                        battery.addEventListener('chargingchange', () => updateBatteryUI(battery));
+                    });
+                } else {
+                    batteryStatusEl.textContent = `STORAGE: 87% | BATT: N/A`;
+                }
+            };
+
+            // --- Input Validation & Event Listeners ---
+            const validateAndSwitch = (fields, nextScreen) => {
+                let allValid = true;
+                fields.forEach(inputEl => {
+                    if (inputEl.value.trim() === '') {
+                        inputEl.classList.add('!border-red-500');
+                        allValid = false;
+                    } else {
+                        inputEl.classList.remove('!border-red-500');
+                    }
+                });
+
+                if (allValid) {
+                    switchScreen(nextScreen);
+                    return true;
+                }
+                return false;
+            };
+
+            Object.values(inputs).forEach(input => {
+                input.addEventListener('input', () => {
+                    input.classList.remove('!border-red-500');
+                });
+            });
+
+            buttons.login.addEventListener('click', () => {
+                const valid = validateAndSwitch([inputs.username, inputs.password], 'caseDetails');
+                if (valid) {
+                    appState.officerName = inputs.username.value.trim();
+                }
+            });
+
+            buttons.startCamera.addEventListener('click', () => {
+                const valid = validateAndSwitch([inputs.caseNumber, inputs.caseDate], 'camera');
+                if (valid) {
+                    appState.caseId = inputs.caseNumber.value.trim();
+                    appState.caseDate = inputs.caseDate.value;
+                    cameraElements.camCaseId.textContent = `CASE: ${appState.caseId}`;
+                    cameraElements.camOfficer.textContent = `OFFICER: ${appState.officerName}`;
+                    startCamera();
+                    startTelemetry();
+                }
+            });
+            
+            buttons.gridToggle.addEventListener('click', () => {
+                appState.gridOverlay = !appState.gridOverlay;
+                buttons.gridToggle.classList.toggle('active');
+                addLog(`Grid overlay ${appState.gridOverlay ? 'enabled' : 'disabled'}.`);
+            });
+
+            buttons.flashToggle.addEventListener('click', () => {
+                appState.flashOn = !appState.flashOn;
+                buttons.flashToggle.classList.toggle('active');
+                addLog(`Flash ${appState.flashOn ? 'enabled' : 'disabled'}.`);
+            });
+
+            cameraElements.aiToggle.addEventListener('change', (e) => {
+                appState.aiDetection = e.target.checked;
+                addLog(`AI detection module ${appState.aiDetection ? 'enabled' : 'disabled'}.`);
+            });
+            
+            cameraElements.lightModes.addEventListener('click', (e) => {
+                if(e.target.tagName === 'BUTTON') {
+                    cameraElements.lightModes.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    addLog(`Light source set to ${e.target.textContent}.`);
+                }
+            });
+            
+            buttons.closeErrorModal.addEventListener('click', () => {
+                errorModalElements.modal.classList.remove('active');
+                switchScreen('login');
+            });
+
+            buttons.modeImage.addEventListener('click', () => {
+                if (appState.isRecording) return;
+                appState.captureMode = 'image';
+                updateCaptureUI();
+            });
+
+            buttons.modeVideo.addEventListener('click', () => {
+                if (appState.isRecording) return;
+                appState.captureMode = 'video';
+                updateCaptureUI();
+            });
+
+            buttons.capture.addEventListener('click', async () => {
+                if (appState.captureMode === 'image') {
+                    if (appState.flashOn) {
+                        const flashOverlay = document.createElement('div');
+                        flashOverlay.className = 'absolute inset-0 bg-white opacity-90 z-50';
+                        screens.camera.appendChild(flashOverlay);
+                        setTimeout(() => { flashOverlay.remove() }, 150);
+                    }
+
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = cameraElements.feed.videoWidth;
+                    tempCanvas.height = cameraElements.feed.videoHeight;
+                    const ctx = tempCanvas.getContext('2d');
+                    
+                    setTimeout(async () => {
+                        ctx.drawImage(cameraElements.feed, 0, 0, tempCanvas.width, tempCanvas.height);
+                        if (appState.gridOverlay || appState.aiDetection) ctx.drawImage(cameraElements.overlay, 0, 0);
+                        
+                        const mediaUrl = tempCanvas.toDataURL('image/jpeg');
+                        const blob = await (await fetch(mediaUrl)).blob();
+
+                        const timestamp = new Date();
+                        const hash = await sha256(mediaUrl + timestamp.toISOString());
+                        const mediaCount = appState.capturedMedia.length + 1;
+
+                        const newMedia = {
+                            type: 'image',
+                            mediaUrl, thumbnailUrl: mediaUrl, timestamp, hash,
+                            filename: `IMG_${mediaCount.toString().padStart(4, '0')}.jpg`,
+                            location: `${(18.5204 + (Math.random() - 0.5) * 0.001).toFixed(6)} N, ${(73.8567 + (Math.random() - 0.5) * 0.001).toFixed(6)} E`,
+                            dimensions: `${tempCanvas.width}x${tempCanvas.height}`,
+                            fileSize: `${(blob.size / 1024).toFixed(2)} KB`
+                        };
+                        appState.capturedMedia.push(newMedia);
+                        galleryElements.thumbnail.src = mediaUrl;
+                        galleryElements.thumbnail.classList.remove('hidden');
+                        galleryElements.count.textContent = appState.capturedMedia.length;
+                        galleryElements.count.classList.remove('hidden');
+                        
+                        addLog(`Image evidence captured: ${newMedia.filename}`);
+                    }, appState.flashOn ? 80 : 0);
+
+
+                } else {
+                    appState.isRecording = !appState.isRecording;
+                    if (appState.isRecording) startRecording();
+                    else stopRecording();
+                    updateCaptureUI();
+                }
+            });
+
+            buttons.gallery.addEventListener('click', () => {
+                if (appState.capturedMedia.length === 0) return; 
+                appState.currentGalleryIndex = 0;
+                stopCamera();
+                stopTelemetry();
+                populateFilmstrip();
+                updateGalleryView();
+                switchScreen('gallery');
+            });
+
+            buttons.backToCamera.addEventListener('click', () => {
+                galleryElements.video.pause();
+                switchScreen('camera');
+                startCamera();
+                startTelemetry();
+            });
+            
+            buttons.backToLogin.addEventListener('click', () => {
+                switchScreen('login');
+            });
+
+            buttons.exitApp.addEventListener('click', () => {
+                window.close();
+            });
+
+            // --- Initialization ---
+            const initialize = () => {
+                inputs.caseDate.value = '';
+                updateCaptureUI();
+                initBatteryIndicator();
+                switchScreen('login');
+            };
+
+            initialize();
+        });
+    </script>
+
+</body>
+</html>
+
